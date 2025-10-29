@@ -1,98 +1,115 @@
 console.log('🚀 DevDocs Simplifier: Content script loaded');
 
-// Text Simplification Engine
+// Enhanced Text Simplification Engine
 class TextSimplifier {
   simplifyELI5(text) {
+    // More aggressive simplification
+    let simplified = text;
+    
+    // Replace technical terms with simple explanations
     const replacements = {
-      'function': 'a special instruction that does something',
-      'variable': 'a box that holds information',
-      'array': 'a numbered list of things',
-      'object': 'a container with labeled sections',
-      'loop': 'doing something over and over',
-      'condition': 'checking if something is true or false',
-      'parameter': 'information you give to something',
-      'argument': 'information you give to something',
-      'return': 'give back a result',
-      'method': 'a special ability something has',
-      'property': 'a feature or characteristic',
-      'API': 'a way for programs to talk to each other',
-      'callback': 'something that happens later',
-      'promise': 'something that will finish in the future',
+      'JavaScript': 'a computer language that makes websites interactive',
+      'programming language': 'way to give instructions to computers',
+      'interpreted': 'read and run immediately',
+      'just-in-time compiled': 'prepared super fast right before running',
+      'first-class functions': 'code blocks you can pass around like toys',
+      'scripting language': 'simple programming language',
+      'non-browser environments': 'programs that aren\'t websites',
+      'prototype-based': 'built by copying and modifying examples',
+      'garbage-collected': 'automatically cleans up unused stuff',
+      'dynamic language': 'flexible and changes as it runs',
+      'imperative': 'giving step-by-step orders',
+      'functional': 'using small reusable pieces',
+      'object-oriented': 'organizing code like real-world objects',
+      'function': 'a mini-program that does one specific job',
+      'variable': 'a labeled box to store information',
+      'array': 'a numbered list of items',
+      'object': 'a container with named sections',
+      'loop': 'repeating an action multiple times',
+      'condition': 'a yes-or-no question the computer checks',
+      'parameter': 'information you give to a function',
+      'argument': 'a value you pass in',
+      'return': 'give back an answer',
+      'method': 'a special skill an object has',
+      'property': 'a characteristic or feature',
+      'API': 'a way for different programs to talk',
+      'callback': 'code that runs later',
+      'promise': 'something that will complete eventually',
       'async': 'happening at different times',
-      'syntax': 'the rules for writing code correctly',
-      'string': 'text or words',
+      'await': 'wait for something to finish',
+      'syntax': 'grammar rules for code',
+      'string': 'text like words or sentences',
       'boolean': 'true or false',
-      'integer': 'a whole number',
-      'float': 'a decimal number'
+      'integer': 'a whole number like 5',
+      'float': 'a decimal number like 3.14',
+      'null': 'intentionally empty',
+      'undefined': 'doesn\'t exist yet',
+      'class': 'a blueprint for creating things',
+      'constructor': 'setup instructions',
+      'inheritance': 'getting traits from parents',
+      'DOM': 'the structure of a webpage',
+      'event': 'something that happens (like a click)',
+      'listener': 'code waiting for something to happen'
     };
     
-    let simplified = text;
-    for (const [tech, simple] of Object.entries(replacements)) {
-      const regex = new RegExp(`\\b${tech}\\b`, 'gi');
-      simplified = simplified.replace(regex, simple);
+    // Apply replacements (case-insensitive for better matching)
+    for (const [technical, simple] of Object.entries(replacements)) {
+      const regex = new RegExp(`\\b${technical}\\b`, 'gi');
+      simplified = simplified.replace(regex, `**${simple}**`);
     }
     
-    const firstSentence = text.match(/[^.!?]+[.!?]+/)?.[0] || text.substring(0, 100);
+    // Extract first sentence as key point
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+    const keyPoint = sentences[0]?.trim() || text.substring(0, 100);
     
-    return `🎈 Explained Like You're 5:\n\n${simplified}\n\n💡 Simple Summary:\nThink of it like this: ${firstSentence.trim()} - but using things you already understand!`;
+    return `🎈 Explained Like You're 5:\n\nImagine you're learning about toys and games! Here's what this means in super simple words:\n\n${simplified}\n\n💡 The Big Idea:\n${keyPoint}\n\nThink of it like building with LEGO blocks - each piece does something simple, but together they make something amazing!`;
   }
   
   summarizeTLDR(text) {
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    const keywords = ['important', 'key', 'main', 'primary', 'essential', 'must', 'should', 'allows', 'enables', 'provides', 'used', 'creates'];
     
-    const important = [];
-    if (sentences[0]) important.push(sentences[0].trim());
+    // Smarter sentence extraction
+    const keywords = [
+      'important', 'key', 'main', 'essential', 'must', 'should', 
+      'allows', 'enables', 'provides', 'used', 'creates', 'helps',
+      'designed', 'purpose', 'goal', 'feature', 'benefit'
+    ];
     
-    for (let i = 1; i < sentences.length && important.length < 3; i++) {
-      const sentence = sentences[i].toLowerCase();
-      if (keywords.some(kw => sentence.includes(kw))) {
-        important.push(sentences[i].trim());
-      }
-    }
+    const scored = sentences.map((s, i) => {
+      let score = i === 0 ? 10 : 0; // First sentence bonus
+      const lower = s.toLowerCase();
+      keywords.forEach(kw => {
+        if (lower.includes(kw)) score += 2;
+      });
+      return { sentence: s.trim(), score };
+    });
     
-    const keyPoint = sentences[0]?.trim() || text.substring(0, 150);
+    // Get top 3 sentences
+    const important = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3)
+      .map(x => x.sentence);
     
-    return `⚡ TLDR (Too Long; Didn't Read):\n\n${important.join(' ')}\n\n📌 Bottom Line:\n${keyPoint}`;
+    const wordCount = text.split(/\s+/).length;
+    
+    return `⚡ TLDR (Too Long; Didn't Read):\n\n${important.join(' ')}\n\n📊 Summary Stats:\n• Original: ${wordCount} words\n• Reduced to: ~${important.join(' ').split(/\s+/).length} words\n• Time saved: ${Math.round(wordCount / 200)} minutes of reading\n\n📌 Bottom Line:\n${important[0]}`;
   }
   
   generateCodeExample(text) {
     const lower = text.toLowerCase();
-    let code = '// Example based on the concept\n\n';
+    let code = '';
+    let explanation = '';
     
     if (lower.includes('array') || lower.includes('list') || lower.includes('map')) {
-      code += `// Working with Arrays\nconst numbers = [1, 2, 3, 4, 5];\n\n// Iterate through array\nnumbers.forEach(num => {\n  console.log(num);\n});\n\n// Transform array\nconst doubled = numbers.map(num => num * 2);\nconsole.log(doubled); // [2, 4, 6, 8, 10]\n\n// Filter array\nconst evens = numbers.filter(num => num % 2 === 0);\nconsole.log(evens); // [2, 4]`;
+      explanation = 'Working with Arrays (lists of items):';
+      code = `// Creating an array\nconst fruits = ['apple', 'banana', 'orange'];\n\n// Loop through each item\nfruits.forEach(fruit => {\n  console.log(\`I like \${fruit}\`);\n});\n\n// Transform array (make uppercase)\nconst loudFruits = fruits.map(f => f.toUpperCase());\n// Result: ['APPLE', 'BANANA', 'ORANGE']\n\n// Filter array (only long names)\nconst longNames = fruits.filter(f => f.length > 5);\n// Result: ['banana', 'orange']\n\n// Get total count\nconsole.log(\`We have \${fruits.length} fruits\`);`;
     } else if (lower.includes('function') || lower.includes('method')) {
-      code += `// Defining a Function\nfunction calculateTotal(price, quantity) {\n  return price * quantity;\n}\n\n// Using the function\nconst total = calculateTotal(10, 3);\nconsole.log(total); // 30\n\n// Arrow function version\nconst calculate = (price, qty) => price * qty;\nconsole.log(calculate(10, 3)); // 30`;
+      explanation = 'Creating and Using Functions:';
+      code = `// Simple function\nfunction greet(name) {\n  return \`Hello, \${name}!\`;\n}\n\nconsole.log(greet('World')); // "Hello, World!"\n\n// Arrow function (modern style)\nconst add = (a, b) => a + b;\nconsole.log(add(5, 3)); // 8\n\n// Function with multiple parameters\nfunction calculatePrice(item, quantity, discount = 0) {\n  const total = item * quantity;\n  return total - (total * discount);\n}\n\nconsole.log(calculatePrice(10, 3, 0.1)); // $27`;
     } else if (lower.includes('object') || lower.includes('class')) {
-      code += `// Creating an Object\nconst user = {\n  name: 'Alice',\n  age: 30,\n  greet() {\n    return \`Hello, I'm \${this.name}!\`;\n  }\n};\n\n// Using the object\nconsole.log(user.name); // "Alice"\nconsole.log(user.greet()); // "Hello, I'm Alice!"\n\n// Adding properties\nuser.email = 'alice@example.com';`;
-    } else if (lower.includes('async') || lower.includes('promise') || lower.includes('await')) {
-      code += `// Async/Await Example\nasync function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    const data = await response.json();\n    console.log(data);\n    return data;\n  } catch (error) {\n    console.error('Error:', error);\n  }\n}\n\n// Using the async function\nfetchData().then(data => {\n  console.log('Received:', data);\n});`;
-    } else {
-      const topic = text.substring(0, 50).trim();
-      code += `// ${topic}\n\n// Example implementation\nconst example = {\n  description: "${topic}",\n  usage: "Refer to documentation for details"\n};\n\nconsole.log(example);\n\n// TODO: Add your specific implementation here`;
-    }
-    
-    return `💻 Code Example:\n\n${code}`;
-  }
-  
-  technicalExplanation(text) {
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    const keyPoint = sentences[0]?.trim() || text.substring(0, 150);
-    
-    let usage = 'handle common development tasks';
-    const lower = text.toLowerCase();
-    if (lower.includes('data') || lower.includes('state')) usage = 'manage application data and state';
-    else if (lower.includes('event') || lower.includes('click')) usage = 'handle user interactions and events';
-    else if (lower.includes('async') || lower.includes('promise')) usage = 'handle asynchronous operations';
-    else if (lower.includes('component')) usage = 'build modular user interfaces';
-    else if (lower.includes('api')) usage = 'interact with external services';
-    
-    return `🔧 Technical Explanation:\n\n📖 Core Concept:\n${keyPoint}\n\n💡 In Practice:\nThis is commonly used in modern development to ${usage}. It provides a structured approach to solving problems efficiently.\n\n🎯 Key Takeaway:\n${sentences.slice(0, 2).join(' ')}`;
-  }
-}
-
-const simplifier = new TextSimplifier();
+      explanation = 'Working with Objects:';
+      code = `// Creating an object\nconst person = {\n  name: 'Alice',\n  age: 30,\n  job: 'Developer',\n  greet() {\n    return \`Hi, I'm \${this.name}!\`;\n  }\n};\n\n// Accessing properties\nconsole.log(person.name); // "Alice"\nconsole.log(person.greet()); // "Hi, I'm Alice!"\n\n// Adding new properties\nperson.email = 'alice@example.com';\n\n// Modern class syntax\nclass User {\n  constructor(name, age) {\n    this.name = name;\n    this.age = age;\n  }\n  \n  introduce() {\n    return \`I'm \${this.name}, \${this.age} years old\`;\n  }\n}\n\nconst user = new User('Bob', 25);\nconsole.log(user.introduce());`;
+    } else if (lower.includes('async
 
 // Message Listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
