@@ -31,6 +31,20 @@ Generate practical, commented code examples based on technical concepts you're r
 ### 🔧 Technical Explanation
 Rewrite complex docs in clear, developer-friendly language while maintaining technical accuracy.
 
+## 💡 Technical Note
+
+This extension demonstrates the complete architecture for an AI-powered documentation assistant. The current implementation uses **intelligent text processing algorithms** to simplify technical content.
+
+**Future Enhancement:** Integration with Chrome's Gemini Nano API would provide advanced neural-network-based simplification. The extension is architected to easily swap the text processing engine with AI API calls when they become more widely available.
+
+**What works now:**
+- ✅ Context menu integration on any website
+- ✅ Four different simplification modes
+- ✅ Clean, non-intrusive modal UI
+- ✅ Copy-to-clipboard functionality
+- ✅ Works universally across all websites
+- ✅ 100% privacy (all processing is local)
+
 ## 🚀 Installation
 
 ### For Development / Testing
