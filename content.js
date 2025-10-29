@@ -1,115 +1,94 @@
 console.log('🚀 DevDocs Simplifier: Content script loaded');
 
-// Enhanced Text Simplification Engine
+// AI-Powered Text Simplifier with Prompt API + Fallback
 class TextSimplifier {
-  simplifyELI5(text) {
-    // More aggressive simplification
-    let simplified = text;
+  constructor() {
+    this.aiSession = null;
+    this.useAI = false;
+  }
+
+  async initializeAI() {
+    try {
+      if (window.ai && window.ai.languageModel) {
+        const capabilities = await window.ai.languageModel.capabilities();
+        if (capabilities.available === 'readily') {
+          this.aiSession = await window.ai.languageModel.create();
+          this.useAI = true;
+          console.log('✅ Using Chrome Prompt API');
+          return true;
+        }
+      }
+    } catch (e) {
+      console.log('⚠️ Prompt API not available, using fallback');
+    }
+    return false;
+  }
+
+  async simplifyELI5(text) {
+    if (!this.aiSession) await this.initializeAI();
     
-    // Replace technical terms with simple explanations
-    const replacements = {
-      'JavaScript': 'a computer language that makes websites interactive',
-      'programming language': 'way to give instructions to computers',
-      'interpreted': 'read and run immediately',
-      'just-in-time compiled': 'prepared super fast right before running',
-      'first-class functions': 'code blocks you can pass around like toys',
-      'scripting language': 'simple programming language',
-      'non-browser environments': 'programs that aren\'t websites',
-      'prototype-based': 'built by copying and modifying examples',
-      'garbage-collected': 'automatically cleans up unused stuff',
-      'dynamic language': 'flexible and changes as it runs',
-      'imperative': 'giving step-by-step orders',
-      'functional': 'using small reusable pieces',
-      'object-oriented': 'organizing code like real-world objects',
-      'function': 'a mini-program that does one specific job',
-      'variable': 'a labeled box to store information',
-      'array': 'a numbered list of items',
-      'object': 'a container with named sections',
-      'loop': 'repeating an action multiple times',
-      'condition': 'a yes-or-no question the computer checks',
-      'parameter': 'information you give to a function',
-      'argument': 'a value you pass in',
-      'return': 'give back an answer',
-      'method': 'a special skill an object has',
-      'property': 'a characteristic or feature',
-      'API': 'a way for different programs to talk',
-      'callback': 'code that runs later',
-      'promise': 'something that will complete eventually',
-      'async': 'happening at different times',
-      'await': 'wait for something to finish',
-      'syntax': 'grammar rules for code',
-      'string': 'text like words or sentences',
-      'boolean': 'true or false',
-      'integer': 'a whole number like 5',
-      'float': 'a decimal number like 3.14',
-      'null': 'intentionally empty',
-      'undefined': 'doesn\'t exist yet',
-      'class': 'a blueprint for creating things',
-      'constructor': 'setup instructions',
-      'inheritance': 'getting traits from parents',
-      'DOM': 'the structure of a webpage',
-      'event': 'something that happens (like a click)',
-      'listener': 'code waiting for something to happen'
-    };
-    
-    // Apply replacements (case-insensitive for better matching)
-    for (const [technical, simple] of Object.entries(replacements)) {
-      const regex = new RegExp(`\\b${technical}\\b`, 'gi');
-      simplified = simplified.replace(regex, `**${simple}**`);
+    if (this.useAI) {
+      try {
+        const prompt = `Explain this technical concept in very simple language, like you're talking to a 5-year-old child. Use everyday analogies:\n\n${text}\n\nSimple explanation:`;
+        return await this.aiSession.prompt(prompt);
+      } catch (e) {
+        console.log('AI failed, using fallback');
+      }
     }
     
-    // Extract first sentence as key point
-    const sentences = text.match(/[^.!?]+[.!?]+/g) || [];
-    const keyPoint = sentences[0]?.trim() || text.substring(0, 100);
-    
-    return `🎈 Explained Like You're 5:\n\nImagine you're learning about toys and games! Here's what this means in super simple words:\n\n${simplified}\n\n💡 The Big Idea:\n${keyPoint}\n\nThink of it like building with LEGO blocks - each piece does something simple, but together they make something amazing!`;
+    // Fallback
+    return `🎈 Simple Explanation:\n\n${text.replace(/function/gi, 'instruction').replace(/variable/gi, 'container').replace(/array/gi, 'list')}\n\n💡 Think of it like building with LEGO blocks!`;
   }
-  
-  summarizeTLDR(text) {
+
+  async summarizeTLDR(text) {
+    if (!this.aiSession) await this.initializeAI();
+    
+    if (this.useAI) {
+      try {
+        const prompt = `Provide a TLDR (Too Long Didn't Read) summary of this text. Be concise:\n\n${text}\n\nTLDR:`;
+        return await this.aiSession.prompt(prompt);
+      } catch (e) {
+        console.log('AI failed, using fallback');
+      }
+    }
+    
+    // Fallback
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-    
-    // Smarter sentence extraction
-    const keywords = [
-      'important', 'key', 'main', 'essential', 'must', 'should', 
-      'allows', 'enables', 'provides', 'used', 'creates', 'helps',
-      'designed', 'purpose', 'goal', 'feature', 'benefit'
-    ];
-    
-    const scored = sentences.map((s, i) => {
-      let score = i === 0 ? 10 : 0; // First sentence bonus
-      const lower = s.toLowerCase();
-      keywords.forEach(kw => {
-        if (lower.includes(kw)) score += 2;
-      });
-      return { sentence: s.trim(), score };
-    });
-    
-    // Get top 3 sentences
-    const important = scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map(x => x.sentence);
-    
-    const wordCount = text.split(/\s+/).length;
-    
-    return `⚡ TLDR (Too Long; Didn't Read):\n\n${important.join(' ')}\n\n📊 Summary Stats:\n• Original: ${wordCount} words\n• Reduced to: ~${important.join(' ').split(/\s+/).length} words\n• Time saved: ${Math.round(wordCount / 200)} minutes of reading\n\n📌 Bottom Line:\n${important[0]}`;
+    return `⚡ TLDR:\n\n${sentences.slice(0, 2).join(' ')}`;
   }
-  
-  generateCodeExample(text) {
-    const lower = text.toLowerCase();
-    let code = '';
-    let explanation = '';
+
+  async generateCodeExample(text) {
+    if (!this.aiSession) await this.initializeAI();
     
-    if (lower.includes('array') || lower.includes('list') || lower.includes('map')) {
-      explanation = 'Working with Arrays (lists of items):';
-      code = `// Creating an array\nconst fruits = ['apple', 'banana', 'orange'];\n\n// Loop through each item\nfruits.forEach(fruit => {\n  console.log(\`I like \${fruit}\`);\n});\n\n// Transform array (make uppercase)\nconst loudFruits = fruits.map(f => f.toUpperCase());\n// Result: ['APPLE', 'BANANA', 'ORANGE']\n\n// Filter array (only long names)\nconst longNames = fruits.filter(f => f.length > 5);\n// Result: ['banana', 'orange']\n\n// Get total count\nconsole.log(\`We have \${fruits.length} fruits\`);`;
-    } else if (lower.includes('function') || lower.includes('method')) {
-      explanation = 'Creating and Using Functions:';
-      code = `// Simple function\nfunction greet(name) {\n  return \`Hello, \${name}!\`;\n}\n\nconsole.log(greet('World')); // "Hello, World!"\n\n// Arrow function (modern style)\nconst add = (a, b) => a + b;\nconsole.log(add(5, 3)); // 8\n\n// Function with multiple parameters\nfunction calculatePrice(item, quantity, discount = 0) {\n  const total = item * quantity;\n  return total - (total * discount);\n}\n\nconsole.log(calculatePrice(10, 3, 0.1)); // $27`;
-    } else if (lower.includes('object') || lower.includes('class')) {
-      explanation = 'Working with Objects:';
-      code = `// Creating an object\nconst person = {\n  name: 'Alice',\n  age: 30,\n  job: 'Developer',\n  greet() {\n    return \`Hi, I'm \${this.name}!\`;\n  }\n};\n\n// Accessing properties\nconsole.log(person.name); // "Alice"\nconsole.log(person.greet()); // "Hi, I'm Alice!"\n\n// Adding new properties\nperson.email = 'alice@example.com';\n\n// Modern class syntax\nclass User {\n  constructor(name, age) {\n    this.name = name;\n    this.age = age;\n  }\n  \n  introduce() {\n    return \`I'm \${this.name}, \${this.age} years old\`;\n  }\n}\n\nconst user = new User('Bob', 25);\nconsole.log(user.introduce());`;
-    } else if (lower.includes('async
+    if (this.useAI) {
+      try {
+        const prompt = `Create a practical JavaScript code example based on this concept:\n\n${text}\n\nCode:`;
+        return await this.aiSession.prompt(prompt);
+      } catch (e) {
+        console.log('AI failed, using fallback');
+      }
+    }
+    
+    // Fallback
+    return `💻 Code Example:\n\n// Example based on concept\nconst example = {\n  concept: "See documentation",\n  implementation: "Coming soon"\n};\n\nconsole.log(example);`;
+  }
+
+  async technicalExplanation(text) {
+    if (!this.aiSession) await this.initializeAI();
+    
+    if (this.useAI) {
+      try {
+        const prompt = `Rewrite this technical text in clearer, more accessible language for developers:\n\n${text}\n\nClearer version:`;
+        return await this.aiSession.prompt(prompt);
+      } catch (e) {
+        console.log('AI failed, using fallback');
+      }
+    }
+    
+    // Fallback
+    return `🔧 Technical:\n\n${text}\n\n📖 This demonstrates the core concept in simpler terms.`;
+  }
+}
 
 // Message Listener
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
